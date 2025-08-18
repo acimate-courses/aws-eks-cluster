@@ -7,3 +7,7 @@ This define AWS EKS cluster with core apps like ArgoCD, Karpenter, CSI driver et
 - Understand VPC LAttice for service to service communication.
 - It works even overlapping CIDR in VPC, withour transit gateways
 - https://d1.awsstatic.com/events/Summits/reinvent2023/NET326_Amazon-VPC-Lattice-architecture-patterns-and-best-practices.pdf
+
+- I got a error the image is not pulled, using below we can find the image what is being pulled
+- kubectl get pod fastapi-74ff578b76-2d2cq -n fastapi-dev -o jsonpath
+- ='{.spec.initContainers[*].image}{"\n"}{.spec.containers[*].image}{"\n"}'

@@ -21,31 +21,31 @@ const domainName = 'acimate.com';
 const fqdn = 'argocd.acimate.com';
 
 // ----- SHARED STACK -----
-const shared = new cdk.Stack(app, 'shared-infra', { env: { account, region } });
+//const shared = new cdk.Stack(app, 'shared-infra-1', { env: { account, region } });
 
 // Lookup existing Route 53 zone
-const zone = route53.HostedZone.fromLookup(shared, 'HostedZone', { domainName });
+//const zone = route53.HostedZone.fromLookup(shared, 'HostedZone', { domainName });
 
 // ACM certificate (DNS validated)
-const cert = new acm.Certificate(shared, 'ArgocdAcmCert', {
-  domainName: fqdn,
-  validation: acm.CertificateValidation.fromDns(zone),
-});
+// const cert = new acm.Certificate(shared, 'ArgocdAcmCert', {
+//   domainName: fqdn,
+//   validation: acm.CertificateValidation.fromDns(zone),
+// });
 
 // Generate a random strong password at deploy time
-const generatedPassword = crypto.randomBytes(12).toString('base64'); // ~16 chars with symbols
-const adminPasswordHash = bcrypt.hashSync(generatedPassword, 10);
+//const generatedPassword = crypto.randomBytes(12).toString('base64'); // ~16 chars with symbols
+//const adminPasswordHash = bcrypt.hashSync(generatedPassword, 10);
 
 // Store plaintext admin password in Secrets Manager (retain for reuse)
-const argocdSecret = new secretsmanager.Secret(shared, 'ArgocdAdminSecret', {
-  secretName: '/eks/argocd/admin',
-  description: 'Argo CD admin console credentials',
-  secretObjectValue: {
-    username: cdk.SecretValue.unsafePlainText('admin'),
-    password: cdk.SecretValue.unsafePlainText(generatedPassword),
-  },
-  removalPolicy: RemovalPolicy.RETAIN,
-});
+// const argocdSecret = new secretsmanager.Secret(shared, 'ArgocdAdminSecret', {
+//   secretName: '/eks/argocd/admin',
+//   description: 'Argo CD admin console credentials',
+//   secretObjectValue: {
+//     username: cdk.SecretValue.unsafePlainText('admin'),
+//     password: cdk.SecretValue.unsafePlainText(generatedPassword),
+//   },
+//   removalPolicy: RemovalPolicy.RETAIN,
+// });
 
 const addOns: Array<blueprints.ClusterAddOn> = [
     new blueprints.addons.ArgoCDAddOn({        
@@ -54,37 +54,37 @@ const addOns: Array<blueprints.ClusterAddOn> = [
         targetRevision: 'main',
         path: `environments/${envName}/apps`,
             },
-        values: {
-            configs: {
-                secret: {
-                    createSecret: true,
-                    argocdServerAdminPassword: adminPasswordHash,
-                    argocdServerAdminPasswordMtime: new Date().toISOString(),
-                },
-            },
-            server: {
-                ingress: {
-                enabled: true,
-                ingressClassName: 'alb',
-                annotations: {
-                    'kubernetes.io/ingress.class': 'alb',
-                    'alb.ingress.kubernetes.io/scheme': 'internet-facing',
-                    'alb.ingress.kubernetes.io/target-type': 'ip',
-                    'alb.ingress.kubernetes.io/listen-ports': '[{"HTTPS":443}]',
-                    'alb.ingress.kubernetes.io/certificate-arn': cert.certificateArn,
-                    'alb.ingress.kubernetes.io/ssl-redirect': '443',
-                    'alb.ingress.kubernetes.io/backend-protocol-version': 'HTTP2',
-                    'external-dns.alpha.kubernetes.io/hostname': fqdn,
-                },
-                hosts: [fqdn],
-                paths: ['/'],
-                pathType: 'Prefix',
-                },
-            },
-            },
+        // values: {
+        //     configs: {
+        //         secret: {
+        //             createSecret: true,
+        //             argocdServerAdminPassword: adminPasswordHash,
+        //             argocdServerAdminPasswordMtime: new Date().toISOString(),
+        //         },
+        //     },
+        //     server: {
+        //         ingress: {
+        //         enabled: true,
+        //         ingressClassName: 'alb',
+        //         annotations: {
+        //             'kubernetes.io/ingress.class': 'alb',
+        //             'alb.ingress.kubernetes.io/scheme': 'internet-facing',
+        //             'alb.ingress.kubernetes.io/target-type': 'ip',
+        //             'alb.ingress.kubernetes.io/listen-ports': '[{"HTTPS":443}]',
+        //             'alb.ingress.kubernetes.io/certificate-arn': cert.certificateArn,
+        //             'alb.ingress.kubernetes.io/ssl-redirect': '443',
+        //             'alb.ingress.kubernetes.io/backend-protocol-version': 'HTTP2',
+        //             'external-dns.alpha.kubernetes.io/hostname': fqdn,
+        //         },
+        //         hosts: [fqdn],
+        //         paths: ['/'],
+        //         pathType: 'Prefix',
+        //         },
+        //     },
+        //     },
         }),
-    new blueprints.addons.MetricsServerAddOn(),
-    new blueprints.addons.ClusterAutoScalerAddOn(),
+    //new blueprints.addons.MetricsServerAddOn(),
+    //new blueprints.addons.ClusterAutoScalerAddOn(),
     new blueprints.addons.AwsLoadBalancerControllerAddOn(),
     new blueprints.addons.VpcCniAddOn(), // support network policies ootb
     new blueprints.addons.CoreDnsAddOn(),
